@@ -3,6 +3,8 @@ var fortune = require("./lib/fortune.js");
 
 var app = express();
 
+// if (app.thing == null) console.log("bleat!");
+
 // set up handlebars view engine
 var handlebars = require("express3-handlebars").create({defaultLayout: "main"});
 app.engine("handlebars", handlebars.engine);

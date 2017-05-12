@@ -10,13 +10,13 @@ suite("Cross-Page Tests", function() {
   });
 
   test("requesting a group rate quote from the hood river tour page should populate the referrer field", function(done) {
-    var referrer = 'http://192.168.100.5:3000/tours/hood-river';
+    var referrer = 'http://localhost:3000/tours/hood-river';
     try {
       browser.visit(referrer, function() {
         browser.clickLink('.requestGroupRate', function() {
-          setTimeout(function() {
+          //setTimeout(function() {
             assert(browser.field('referrer').value === referrer);  
-          }, 1000);
+          //}, 1000);
           done();
         });
       });
@@ -30,9 +30,9 @@ suite("Cross-Page Tests", function() {
     try {
       browser.visit(referrer, function() {
         browser.clickLink('.requestGroupRate', function() {
-          setTimeout(function() {
+          //setTimeout(function() {
             assert(browser.field('referrer').value === referrer);  
-          }, 1000);
+          //}, 2000);
           done();
         });
       });

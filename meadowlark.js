@@ -1,5 +1,6 @@
 var express = require("express");
 var fortune = require("./lib/fortune.js");
+var weather = require("./lib/weather.js");
 
 var app = express();
 
@@ -9,6 +10,12 @@ var app = express();
 var handlebars = require("express3-handlebars").create({defaultLayout: "main"});
 app.engine("handlebars", handlebars.engine);
 app.set("view engine", "handlebars");
+
+app.use(function(req, res, next) {
+  if(!res.locals.partials) res.locals.partials = {};
+  res.locals.partials.weather = weather.getWeatherData();
+  next();
+});
 
 // set up static
 app.use(express.static(__dirname + "/public"));

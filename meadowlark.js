@@ -1,15 +1,26 @@
 var express = require("express");
+//var bodyParser = require("body-parser");
 var fortune = require("./lib/fortune.js");
 var weather = require("./lib/weather.js");
 
+// set up handlebars view engine
+var handlebars = require("express3-handlebars").create({
+  defaultLayout: "main",
+  helpers: {
+    section: function(name, options) {
+      if (!this._sections) this._sections = {};
+      this._sections[name] = options.fn(this);
+      return null;
+    }
+  }
+});
+
 var app = express();
 
-// if (app.thing == null) console.log("bleat!");
-
-// set up handlebars view engine
-var handlebars = require("express3-handlebars").create({defaultLayout: "main"});
 app.engine("handlebars", handlebars.engine);
 app.set("view engine", "handlebars");
+
+app.set("port", process.env.PORT || 3000);
 
 app.use(function(req, res, next) {
   if(!res.locals.partials) res.locals.partials = {};
@@ -17,10 +28,10 @@ app.use(function(req, res, next) {
   next();
 });
 
+//app.use(bodyParser.json());
+
 // set up static
 app.use(express.static(__dirname + "/public"));
-
-app.set("port", process.env.PORT || 3000);
 
 app.use(function(req, res, next) {
   res.locals.showTests = app.get("env") !== "production" && req.query.test === "1";
@@ -41,6 +52,23 @@ app.get("/header", function(req, res) {
     s += name + ": " + req.headers[name] + "\n";
   }
   res.send(s);
+});
+
+app.get("/jquery-test", function(req, res) {
+  res.render("jquery-test");
+});
+
+app.get("/nursery-rhyme", function(req, res) {
+  res.render("nursery-rhyme");
+});
+
+app.get("/data/nursery-rhyme", function(req, res) {
+  res.json({
+    animal: "squirel",
+    bodyPart: "tail",
+    adjective: "bushy",
+    noun: "neck"
+  });
 });
 
 app.get("/about", function(req, res) {

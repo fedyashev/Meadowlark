@@ -86,7 +86,7 @@ app.post("/process", function(req, res) {
   } else {
     res.redirect(303, "/thank-you");
   }
-  res.redirect(303, '/thank-you');
+  //res.redirect(303, '/thank-you');
 });
 
 app.get("/thank-you", function(req, res) {

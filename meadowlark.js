@@ -1,5 +1,5 @@
 var express = require("express");
-//var bodyParser = require("body-parser");
+var bodyParser = require("body-parser");
 var fortune = require("./lib/fortune.js");
 var weather = require("./lib/weather.js");
 
@@ -28,7 +28,7 @@ app.use(function(req, res, next) {
   next();
 });
 
-//app.use(bodyParser.json());
+app.use(bodyParser());
 
 // set up static
 app.use(express.static(__dirname + "/public"));
@@ -69,6 +69,28 @@ app.get("/data/nursery-rhyme", function(req, res) {
     adjective: "bushy",
     noun: "neck"
   });
+});
+
+app.get("/newsletter", function(req, res) {
+  // TODO
+  res.render("newsletter", {csrf: "CSRF token goes here"});
+});
+
+app.post("/process", function(req, res) {
+  // console.log('Form (from querystring): ' + req.query.form);
+  // console.log('CSRF token (from hidden form field): ' + req.body._csrf);
+  // console.log('Name (from visible form field): ' + req.body.name);
+  // console.log('Email (from visible form field): ' + req.body.email);
+  if (req.xhr || req.accepts("json,html")==="json") {
+    res.send({success: "true"});
+  } else {
+    res.redirect(303, "/thank-you");
+  }
+  res.redirect(303, '/thank-you');
+});
+
+app.get("/thank-you", function(req, res) {
+  res.render("thank-you");
 });
 
 app.get("/about", function(req, res) {

@@ -1,5 +1,8 @@
 var express = require("express");
 var bodyParser = require("body-parser");
+var formidable = require("formidable");
+var jqupload = require("jquery-file-upload-middleware");
+
 var fortune = require("./lib/fortune.js");
 var weather = require("./lib/weather.js");
 
@@ -26,6 +29,18 @@ app.use(function(req, res, next) {
   if(!res.locals.partials) res.locals.partials = {};
   res.locals.partials.weather = weather.getWeatherData();
   next();
+});
+
+app.use("/upload", function(req, res, next) {
+  var now = Date.now();
+  jqupload.fileHandler({
+    uploadDir: function() {
+      return __dirname + "/public/uploads/" + now;
+    },
+    uploadUrl: function() {
+      return "/uploads/" + now;
+    }
+  })(req, res, next);
 });
 
 app.use(bodyParser());
@@ -110,6 +125,30 @@ app.get("/tours/oregon-coast", function(req, res) {
 
 app.get("/tours/request-group-rate", function(req, res) {
   res.render("tours/request-group-rate");
+});
+
+app.get("/contest/vacation-photo", function(req, res) {
+  var now = new Date();
+  res.render("contest/vacation-photo", {
+    year: now.getFullYear(),
+    month: now.getMonth(),
+  });
+});
+
+app.post("/contest/vacation-photo/:year/:month", function(req, res) {
+  var form = new formidable.IncomingForm();
+  form.parse(req, function(err, fields, files) {
+    if (err) return res.redirect(303, "/error");
+    console.log("recieved fields:");
+    console.log(fields);
+    console.log("recieved files:");
+    console.log(files);
+    res.redirect(303, "/thank-you");
+  });
+});
+
+app.get("/error", function(req, res) {
+  res.render("error");
 });
 
 // custom 404 page

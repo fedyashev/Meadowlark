@@ -1,7 +1,7 @@
 var express = require("express");
 var bodyParser = require("body-parser");
 var formidable = require("formidable");
-var jqupload = require("jquery-file-upload-middleware");
+//var jqupload = require("jquery-file-upload-middleware");
 
 var fortune = require("./lib/fortune.js");
 var weather = require("./lib/weather.js");
@@ -31,17 +31,17 @@ app.use(function(req, res, next) {
   next();
 });
 
-app.use("/upload", function(req, res, next) {
-  var now = Date.now();
-  jqupload.fileHandler({
-    uploadDir: function() {
-      return __dirname + "/public/uploads/" + now;
-    },
-    uploadUrl: function() {
-      return "/uploads/" + now;
-    }
-  })(req, res, next);
-});
+// app.use("/upload", function(req, res, next) {
+//   var now = Date.now();
+//   jqupload.fileHandler({
+//     uploadDir: function() {
+//       return __dirname + "/public/uploads/" + now;
+//     },
+//     uploadUrl: function() {
+//       return "/uploads/" + now;
+//     },
+//   })(req, res, next);
+// });
 
 app.use(bodyParser());
 

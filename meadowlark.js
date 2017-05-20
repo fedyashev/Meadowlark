@@ -1,10 +1,14 @@
+// import npm libs
 var express = require("express");
 var bodyParser = require("body-parser");
+var cookieParser = require("cookie-parser");
 var formidable = require("formidable");
 //var jqupload = require("jquery-file-upload-middleware");
 
+// import my libs
 var fortune = require("./lib/fortune.js");
 var weather = require("./lib/weather.js");
+var credentials = require("./credentials.js");
 
 // set up handlebars view engine
 var handlebars = require("express3-handlebars").create({
@@ -44,6 +48,8 @@ app.use(function(req, res, next) {
 // });
 
 app.use(bodyParser());
+app.use(cookieParser(credentials.cookieSecret));
+app.use(require("express-session")());
 
 // set up static
 app.use(express.static(__dirname + "/public"));
@@ -57,6 +63,9 @@ app.use(function(req, res, next) {
 
 // routes
 app.get("/", function(req, res) {
+  req.session.userName = 'Anonymous';
+  var colorScheme = req.session.colorScheme || 'dark';
+  
   res.render("home");
 });
 
@@ -87,8 +96,15 @@ app.get("/data/nursery-rhyme", function(req, res) {
 });
 
 app.get("/newsletter", function(req, res) {
+  //var monster = req.cookies.monster;
+  //var signedMonster = req.signedCookies.signed_monster;
+  if (monster) console.log(monster);
+  if (signedMonster) console.log(signedMonster);
   // TODO
   res.render("newsletter", {csrf: "CSRF token goes here"});
+  //res.cookie("monster", "nom nom");
+  //res.cookie("signed_monster", "nom nom", {signed: true});
+  //res.clearCookie("monster");
 });
 
 app.post("/process", function(req, res) {

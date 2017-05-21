@@ -2,6 +2,9 @@
 <html>
 <head>
   <title>Meadowlark Travel</title>
+
+  {{> bootstrap}}
+
   {{{_sections.head}}}
 
   {{#if showTests}}
@@ -14,6 +17,18 @@
   <header>
     <img src="/img/logo.png" alt="Meadowlark Travel Logo">
   </header>
+
+  {{#if flash}}
+    <div class="alert alert-dismissible alert-{{flash.type}}">
+      <button type="button" class="close" data-dimiss="alert" aria-hidden="true">
+        &times;
+      </button>
+      <strong>
+        {{flash.intro}}
+      </strong>
+      {{{flash.message}}}
+    </div>
+  {{/if}}
 
   {{{body}}}
 

@@ -1,8 +1,10 @@
+"use strict"
 // import npm libs
 var express = require("express");
 var bodyParser = require("body-parser");
 var cookieParser = require("cookie-parser");
 var formidable = require("formidable");
+var validator = require("validator");
 //var jqupload = require("jquery-file-upload-middleware");
 
 // import my libs
@@ -29,9 +31,27 @@ app.set("view engine", "handlebars");
 
 app.set("port", process.env.PORT || 3000);
 
+// set up body-parser
+app.use(bodyParser.urlencoded({extended: "false"}));
+app.use(bodyParser.json());
+
+app.use(cookieParser(credentials.cookieSecret));
+app.use(require("express-session")({
+  resave: "false",
+  saveUninitialized: "false",
+  secret: "secret",
+  //cookie: {secure: true}
+}));
+
 app.use(function(req, res, next) {
   if(!res.locals.partials) res.locals.partials = {};
   res.locals.partials.weather = weather.getWeatherData();
+  next();
+});
+
+app.use(function(req, res, next) {
+  res.locals.flash = req.session.flash;
+  delete req.session.flash;
   next();
 });
 
@@ -47,10 +67,6 @@ app.use(function(req, res, next) {
 //   })(req, res, next);
 // });
 
-app.use(bodyParser());
-app.use(cookieParser(credentials.cookieSecret));
-app.use(require("express-session")());
-
 // set up static
 app.use(express.static(__dirname + "/public"));
 
@@ -63,9 +79,8 @@ app.use(function(req, res, next) {
 
 // routes
 app.get("/", function(req, res) {
-  req.session.userName = 'Anonymous';
-  var colorScheme = req.session.colorScheme || 'dark';
-  
+  //req.session.userName = 'Anonymous';
+  //var colorScheme = req.session.colorScheme || 'dark'; 
   res.render("home");
 });
 
@@ -96,15 +111,44 @@ app.get("/data/nursery-rhyme", function(req, res) {
 });
 
 app.get("/newsletter", function(req, res) {
-  //var monster = req.cookies.monster;
-  //var signedMonster = req.signedCookies.signed_monster;
-  if (monster) console.log(monster);
-  if (signedMonster) console.log(signedMonster);
-  // TODO
   res.render("newsletter", {csrf: "CSRF token goes here"});
-  //res.cookie("monster", "nom nom");
-  //res.cookie("signed_monster", "nom nom", {signed: true});
-  //res.clearCookie("monster");
+});
+
+app.post("/newsletter", function(req, res) {
+  var name = req.body.name || "";
+  var email = req.body.email || "";
+  if (!validator.isEmail(email)) {
+  //if (!email.match(VALID_EMAIL_REGEX)) {
+    if (req.xhr) return res.json({error: "Ivalid name email address"});
+    req.session.flash = {
+      type: "danger",
+      intro: "Validation error!",
+      message: "The email address you entered has not valid."
+    };
+    return res.redirect(303, "/newsletter/archive");
+  };
+  var nls = new NewsletterSignup({name: name, email: email}).save(function(err) {
+    if (err) {
+      if (req.xhr) return res.json({error: "Database error."});
+      req.session.flash = {
+        type: "danger",
+        intro: "Database error!",
+        message: "There was a database error; Please try again later."
+      };
+      return res.redirect(303, "/newsletter/archive");
+    }
+    if (req.xhr) return res.json({success: true});
+    req.session.flash = {
+      type: "success",
+      intro: "Thank you!",
+      message: "You have now been signed up for the newsletter."
+    };
+    return res.redirect(303, "/newsletter/archive");
+  });
+});
+
+app.get("/newsletter/archive", function(req, res) {
+  res.render("newsletter-archive");
 });
 
 app.post("/process", function(req, res) {

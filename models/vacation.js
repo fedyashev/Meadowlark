@@ -1,7 +1,19 @@
 var mongoose = require("mongoose");
 
 var vacationSchema = mongoose.Schema({
-  // TODO
+  name: String,
+  slug: String,
+  category: String,
+  sku: String,
+  description: String,
+  priceInCents: Number,
+  tags: [String],
+  inSeason: Boolean,
+  available: Boolean,
+  requiresWaiver: Boolean,
+  maximumGuests: Number,
+  notes: String,
+  packagesSold: Number,
 });
 
 vacationSchema.methods.getDisplayPrice = function() {

@@ -1,16 +1,23 @@
-"use strict"
+/* Import libaries */
+
 // import npm libs
 var express = require("express");
 var bodyParser = require("body-parser");
 var cookieParser = require("cookie-parser");
+var expressSession = require("express-session");
 var formidable = require("formidable");
 var validator = require("validator");
+var fs = require("fs");
+var mongoose = require("mongoose");
 //var jqupload = require("jquery-file-upload-middleware");
 
-// import my libs
+// import project libs
 var fortune = require("./lib/fortune.js");
 var weather = require("./lib/weather.js");
 var credentials = require("./credentials.js");
+var cartValidation = require("./lib/cartValidation.js");
+
+/* Configurate application */
 
 // set up handlebars view engine
 var handlebars = require("express3-handlebars").create({
@@ -26,34 +33,45 @@ var handlebars = require("express3-handlebars").create({
 
 var app = express();
 
+app.set("port", process.env.PORT || 3000);
+
+// set up templating engine - Handlebars
 app.engine("handlebars", handlebars.engine);
 app.set("view engine", "handlebars");
-
-app.set("port", process.env.PORT || 3000);
 
 // set up body-parser
 app.use(bodyParser.urlencoded({extended: "false"}));
 app.use(bodyParser.json());
 
+// set up cookie-parser
 app.use(cookieParser(credentials.cookieSecret));
-app.use(require("express-session")({
-  resave: "false",
-  saveUninitialized: "false",
+
+// set up express-session
+app.use(expressSession({
+  resave: false,
+  saveUninitialized: false,
   secret: "secret",
   //cookie: {secure: true}
 }));
 
+// add partials to Handlebars helpers
 app.use(function(req, res, next) {
   if(!res.locals.partials) res.locals.partials = {};
   res.locals.partials.weather = weather.getWeatherData();
   next();
 });
 
+// add flash messages to sessions
 app.use(function(req, res, next) {
   res.locals.flash = req.session.flash;
   delete req.session.flash;
   next();
 });
+
+app.use(cartValidation.checkWaivers);
+app.use(cartValidation.checkGuestCounts);
+
+// app.use(require("./lib/tourRequiresWaiver.js"));
 
 // app.use("/upload", function(req, res, next) {
 //   var now = Date.now();
@@ -75,7 +93,29 @@ app.use(function(req, res, next) {
   next();
 });
 
+
+app.use(function(req, res, next) {
+  console.log("[" + (new Date()).toLocaleString() + "] " + "processing from URL: " + req.url + "");
+  next();
+});
 // app.disable("x-powered-by");
+
+// set up mongoose
+var opts = {
+  server: {
+    socketOptions: {keepAlive: 1},
+  },
+};
+switch(app.get("env")) {
+  case "development":
+    mongoose.connect(credentials.mongo.development.connectionString, opts);
+    break;
+  case "production":
+    mongoose.connect(credentials.mongo.production.connectionString, opts);
+    break;
+  default:
+    throw new Error("Unknow execution enviroment: " + app.get("env"));
+}
 
 // routes
 app.get("/", function(req, res) {
@@ -127,7 +167,11 @@ app.post("/newsletter", function(req, res) {
     };
     return res.redirect(303, "/newsletter/archive");
   };
-  var nls = new NewsletterSignup({name: name, email: email}).save(function(err) {
+  // function NewsletterSignup(name, email) {
+  //   this.name = name;
+  //   this.email = email;
+  // };
+  /*var nls = */new NewsletterSignup({name: name, email: email}).save(function(err) {
     if (err) {
       if (req.xhr) return res.json({error: "Database error."});
       req.session.flash = {
@@ -195,16 +239,50 @@ app.get("/contest/vacation-photo", function(req, res) {
   });
 });
 
+// make sure data directory exists
+var dataDir = __dirname + "/data";
+var vacationPhotoDir = dataDir + "/vacation-photo";
+fs.existsSync(dataDir) || fs.mkdirSync(dataDir);
+fs.existsSync(vacationPhotoDir) || fs.mkdirSync(vacationPhotoDir);
+
+function saveContestEntry(contestName, email, year, month, photoPath) {
+  // TODO...this will come later
+}
+
 app.post("/contest/vacation-photo/:year/:month", function(req, res) {
   var form = new formidable.IncomingForm();
   form.parse(req, function(err, fields, files) {
     if (err) return res.redirect(303, "/error");
-    console.log("recieved fields:");
-    console.log(fields);
-    console.log("recieved files:");
-    console.log(files);
-    res.redirect(303, "/thank-you");
+    // console.log("recieved fields:");
+    // console.log(fields);
+    // console.log("recieved files:");
+    // console.log(files);
+    // res.redirect(303, "/thank-you");
+    if (err) {
+      res.session.flash = {
+        type: "danger",
+        intro: "Oops!",
+        mesage: "There was an error processing your submission. Please try again."
+      };
+      res.redirect(303, "/contest/vacation-photo");
+    }
+    var photo = files.photo;
+    var dir = vacationPhotoDir + "/" + Date.now();
+    var path = dir + "/" + photo.name;
+    fs.mkdirSync(dir);
+    fs.renameSync(photo.path, dir + '/' + photo.name);
+    saveContestEntry('vacation-photo', fields.email, req.params.year, req.params.month, path);
+    req.session.flash = {
+      type: "success",
+      intro: "Good luck!",
+      message: 'You have been entered into the contest.',
+    };
+    return res.redirect(303, '/contest/vacation-photo/entries');
   });
+});
+
+app.get("/contest/vacation-photo/entries", function(req, res) {
+  res.render("contest/entries");
 });
 
 app.get("/error", function(req, res) {

@@ -10,12 +10,14 @@
   "license": "ISC",
   "dependencies": {
     "body-parser": "^1.17.1",
+    "connect": "^3.6.2",
     "cookie-parser": "^1.4.3",
     "express": "^4.15.2",
     "express-session": "^1.15.3",
     "express3-handlebars": "^0.5.2",
     "formidable": "^1.1.1",
     "mongoose": "^4.10.1",
+    "session-mongoose": "^0.5.2",
     "validator": "^7.0.0"
   },
   "devDependencies": {

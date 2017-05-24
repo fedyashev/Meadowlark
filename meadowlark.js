@@ -1,6 +1,4 @@
-/* Import libaries */
-
-// import npm libs
+// Import npm modules
 var express = require("express");
 var bodyParser = require("body-parser");
 var cookieParser = require("cookie-parser");
@@ -11,65 +9,13 @@ var mongoose = require("mongoose");
 //var sessionStore = new MongoSessionStore({url: credentials.mongo.connectionString});
 //var jqupload = require("jquery-file-upload-middleware");
 
-// import project libs
+// Import project modules
 var weather = require("./lib/weather.js");
 var credentials = require("./credentials.js");
 var cartValidation = require("./lib/cartValidation.js");
 
-// import models
-var Vacation = require("./models/vacation.js");
-var VacationInSeasonListener = require("./models/vacationInSeasonListener.js");
-
-Vacation.find(function(err, vacations) {
-  if(vacations.length) return;
-
-  new Vacation({
-    name: 'Hood River Day Trip',
-    slug: 'hood-river-day-trip',
-    category: 'Day Trip',
-    sku: 'HR199',
-    description: 'Spend a day sailing on the Columbia and ' +
-      'enjoying craft beers in Hood River!',
-    priceInCents: 9995,
-    tags: ['day trip', 'hood river', 'sailing', 'windsurfing', 'breweries'],
-    inSeason: true,
-    maximumGuests: 16,
-    available: true,
-    packagesSold: 0,
-  }).save();
-
-  new Vacation({
-    name: 'Oregon Coast Getaway',
-    slug: 'oregon-coast-getaway',
-    category: 'Weekend Getaway',
-    sku: 'OC39',
-    description: 'Enjoy the ocean air and quaint coastal towns!',
-    priceInCents: 269995,
-    tags: ['weekend getaway', 'oregon coast', 'beachcombing'],
-    inSeason: false,
-    maximumGuests: 8,
-    available: true,
-    packagesSold: 0,
-  }).save();
-
-  new Vacation({
-    name: 'Rock Climbing in Bend',
-    slug: 'rock-climbing-in-bend',
-    category: 'Adventure',
-    sku: 'B99',
-    description: 'Experience the thrill of climbing in the high desert.',
-    priceInCents: 289995,
-    tags: ['weekend getaway', 'bend', 'high desert', 'rock climbing'],
-    inSeason: true,
-    requiresWaiver: true,
-    maximumGuests: 4,
-    available: false,
-    packagesSold: 0,
-    notes: 'The tour guide is currently recovering from a skiing accident.',
-  }).save();
-});
-
-/* Configurate application */
+// Initial seeds in 
+//require("./models/initialsSeeds.js")();
 
 // set up handlebars view engine
 var handlebars = require("express3-handlebars").create({
@@ -154,20 +100,8 @@ switch(app.get("env")) {
     throw new Error("Unknow execution enviroment: " + app.get("env"));
 }
 
-var router = require("./routes.js")(app);
-
-// custom 404 page
-app.use(function(req, res, next) {
-  res.status(404);
-  res.render("404");
-});
-
-// custom 500 page
-app.use(function(err, req, res, next) {
-  console.error(err.stack);
-  res.status(500);
-  res.render("500");
-});
+// Router
+var router = require("./routes/index.js")(app);
 
 // run server to listen clients
 app.listen(app.get("port"), function() {
